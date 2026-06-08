@@ -1,0 +1,51 @@
+// src/styles/custom-admin.scss
+
+// 1. Define Brand Colors
+:root {
+  --brand-primary: #6a00ff; /* Valnee Purple */
+  --brand-bg: #00020d;
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* --- GLOBAL DARK THEME FIXES (Safe for Dashboard) --- */
+body {
+  background-color: var(--brand-bg) !important;
+  color: white;
+  overflow: hidden;
+}
+
+input, textarea, select {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border-radius: 8px !important;
+}
+
+button[type="submit"],
+.btn--style-primary {
+  background-color: var(--brand-primary) !important;
+  border-radius: 8px !important;
+}
+
+div[class*="template-minimal"] {
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: stretch;
+  justify-content: center;
+}
+
+/* The Login Card */
+div[class*="template-minimal"] > div {
+  background: rgba(10, 10, 10, 0.85) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  padding: 40px !important;
+  max-width: 500px;
+  width: 100%;
+}

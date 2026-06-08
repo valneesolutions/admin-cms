@@ -1,0 +1,43 @@
+{
+  "name": "valnee-admin-cms",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "SKIP_ENV_VALIDATION=true next build",
+    "start": "next start --port 3001",
+    "lint": "next lint",
+    "generate:types": "payload generate:types",
+    "create-admin": "tsx src/create-admin.ts"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "3.69.0",
+    "@payloadcms/next": "3.69.0",
+    "@payloadcms/richtext-lexical": "3.69.0",
+    "@payloadcms/storage-s3": "3.69.0",
+    "@t3-oss/env-nextjs": "^0.13.10",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "next": "15.5.9",
+    "payload": "3.69.0",
+    "plaiceholder": "^3.0.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "sharp": "^0.34.5",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.5",
+    "sass": "^1.89.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "undici": "6.19.2"
+  }
+}

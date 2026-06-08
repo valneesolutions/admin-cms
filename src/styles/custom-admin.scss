@@ -26,27 +26,154 @@ button[type="submit"],
   border-radius: 8px !important;
 }
 
-div[class*="template-minimal"] {
-  background-size: cover;
-  background-position: center;
+/* Centering and layout of the login screen */
+.template-minimal {
+  background: #05060f !important;
   min-height: 100vh;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* The Login Card Wrapper (contains Logo and Form) */
+.template-minimal__wrap {
+  background: #111222 !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7), 0 0 100px rgba(106, 0, 255, 0.18) !important;
+  padding: 48px 40px !important;
+  max-width: 440px;
+  width: 100%;
+  display: flex;
   flex-direction: column;
-  gap: 20px;
-  align-items: stretch;
+  gap: 32px;
+}
+
+/* Header container (keeps Logo clean) */
+.template-minimal__header {
+  margin-bottom: 8px;
+  display: flex;
   justify-content: center;
 }
 
-/* The Login Card */
-div[class*="template-minimal"] > div {
-  background: rgba(10, 10, 10, 0.85) !important;
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-  padding: 40px !important;
-  max-width: 500px;
+/* Input Fields & Form Controls */
+.template-minimal form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.template-minimal .field-type {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-minimal label {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8) !important;
+  letter-spacing: 0.02em;
+}
+
+.template-minimal input[type="email"],
+.template-minimal input[type="password"],
+.template-minimal input[type="text"] {
+  background: #1d1e2c !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  border-radius: 10px !important;
+  transition: all 0.25s ease !important;
+  outline: none !important;
+}
+
+.template-minimal input[type="email"]:focus,
+.template-minimal input[type="password"]:focus,
+.template-minimal input[type="text"]:focus {
+  background: #25273c !important;
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 4px rgba(106, 0, 255, 0.15) !important;
+}
+
+/* Button & Links styling */
+.template-minimal button[type="submit"] {
+  background: var(--brand-primary) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  padding: 14px 24px !important;
+  border-radius: 10px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  margin-top: 12px !important;
+  box-shadow: 0 8px 20px rgba(106, 0, 255, 0.3) !important;
+}
+
+.template-minimal button[type="submit"]:hover {
+  background: #7a1aff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(106, 0, 255, 0.45) !important;
+}
+
+.template-minimal button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+.template-minimal a {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 13px !important;
+  text-decoration: none !important;
+  transition: color 0.2s ease !important;
+  text-align: right;
+  margin-top: -8px;
+}
+
+.template-minimal a:hover {
+  color: #fff !important;
+  text-decoration: underline !important;
+}
+
+/* Password input relative wrapper and eye button toggle */
+.password-input-wrapper {
+  position: relative;
   width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 48px !important;
+}
+
+.password-toggle-btn {
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  transition: color 0.2s ease !important;
+  z-index: 10 !important;
+}
+
+.password-toggle-btn:hover {
+  color: #fff !important;
+  background: transparent !important;
 }
 
 /* --- LOADER STYLING --- */

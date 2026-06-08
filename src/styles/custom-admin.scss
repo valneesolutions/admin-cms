@@ -11,7 +11,6 @@
 body {
   background-color: var(--brand-bg) !important;
   color: white;
-  overflow: hidden;
 }
 
 input, textarea, select {
@@ -49,3 +48,65 @@ div[class*="template-minimal"] > div {
   max-width: 500px;
   width: 100%;
 }
+
+/* --- LOADER STYLING --- */
+.admin-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  width: 100%;
+  gap: 24px;
+}
+
+.admin-loader-spinner-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-loader-spinner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid rgba(255, 255, 255, 0.05);
+  border-top: 3px solid var(--brand-primary);
+  border-radius: 50%;
+  animation: admin-spin 1s linear infinite;
+}
+
+.admin-loader-logo {
+  width: 40px;
+  height: 40px;
+  animation: admin-pulse 2s ease-in-out infinite;
+}
+
+.admin-loader-text {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  animation: admin-fade-text 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes admin-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes admin-pulse {
+  0%, 100% { transform: scale(0.92); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes admin-fade-text {
+  0% { opacity: 0.4; }
+  100% { opacity: 0.8; }
+}
+

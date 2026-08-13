@@ -174,7 +174,7 @@ export interface Blog {
   id: number;
   title: string;
   /**
-   * The public URL will be /blog/{slug}. It is normalized automatically when saved.
+   * The public URL will be /blogs/{slug}. It is normalized automatically when saved.
    */
   slug: string;
   status: 'draft' | 'published';

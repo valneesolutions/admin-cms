@@ -6,6 +6,11 @@ export const Articles: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'status', 'author', 'updatedAt'],
+    components: {
+      edit: {
+        beforeDocumentControls: ['@/components/BlogPreviewTabs#BlogPreviewTabs'],
+      },
+    },
   },
   access: {
     read: ({ req }) => {
@@ -51,7 +56,7 @@ export const Articles: CollectionConfig = {
       index: true,
       admin: {
         position: 'sidebar',
-        description: 'The public URL will be /blog/{slug}. It is normalized automatically when saved.',
+        description: 'The public URL will be /blogs/{slug}. It is normalized automatically when saved.',
       },
     },
     {
@@ -106,6 +111,13 @@ export const Articles: CollectionConfig = {
       admin: {
         description: 'Write or paste Markdown content. This remains the API body format.',
         rows: 20,
+      },
+    },
+    {
+      name: 'livePreview',
+      type: 'ui',
+      admin: {
+        components: { Field: '@/components/BlogLiveMarkdownPreview#BlogLiveMarkdownPreview' },
       },
     },
     {

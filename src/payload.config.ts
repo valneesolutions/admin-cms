@@ -19,12 +19,12 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import 'dotenv/config'
 
-import { Users } from './collections/Users'
-import { Media } from './collections/Media/config'
-import { env } from './lib/env'
-import { Articles } from './collections/Articles/config'
-import { ArticleAuthors } from './collections/ArticleAuthors/config'
-import { CaseStudies } from './collections/CaseStudies'
+import { Users } from './collections/Users.ts'
+import { Media } from './collections/Media/config.ts'
+import { env } from './lib/env.ts'
+import { Articles } from './collections/Articles/config.ts'
+import { ArticleAuthors } from './collections/ArticleAuthors/config.ts'
+import { CaseStudies } from './collections/CaseStudies.ts'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)

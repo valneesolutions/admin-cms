@@ -7,6 +7,8 @@ export const ArticleAuthors: CollectionConfig = {
     {
       name: 'name',
       type: 'text',
+      required: true,
+      unique: true,
     },
   ],
 }

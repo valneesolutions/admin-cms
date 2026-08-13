@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { generateBlurDataURL, isEligibleForBlurDataURL } from './lib/generate-blur-data'
+import { generateBlurDataURL, isEligibleForBlurDataURL } from './lib/generate-blur-data.ts'
 
 export const Media: CollectionConfig = {
     slug: 'media',

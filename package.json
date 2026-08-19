@@ -2,13 +2,16 @@
   "name": "valnee-admin-cms",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "SKIP_ENV_VALIDATION=true next build",
     "start": "next start --port 3001",
     "lint": "next lint",
     "generate:types": "payload generate:types",
-    "create-admin": "tsx src/create-admin.ts"
+    "create-admin": "tsx src/create-admin.ts",
+    "migrate:article-authors": "tsx src/migrate-article-authors.ts",
+    "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.69.0",
@@ -23,6 +26,8 @@
     "plaiceholder": "^3.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "sharp": "^0.34.5",
     "zod": "^4.2.1"
   },

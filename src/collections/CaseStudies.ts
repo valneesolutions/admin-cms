@@ -31,7 +31,20 @@ export const CaseStudies: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       required: true,
+      label: 'Thumbnail Image',
+      admin: {
+        description: 'Shown on the case studies listing / cards.',
+      },
+    },
+    {
+      name: 'cover_image',
+      type: 'upload',
+      relationTo: 'media',
+      required: true,
       label: 'Cover Image',
+      admin: {
+        description: 'Banner image shown inside the case study page.',
+      },
     },
     {
       name: 'category',

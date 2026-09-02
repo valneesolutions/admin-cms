@@ -241,7 +241,14 @@ export interface CaseStudy {
    * URL identifier (e.g., signalmint-casestudy)
    */
   slug: string;
+  /**
+   * Shown on the case studies listing / cards.
+   */
   image: number | Media;
+  /**
+   * Banner image shown inside the case study page. Leave empty to reuse the thumbnail image.
+   */
+  cover_image?: (number | null) | Media;
   category?: string | null;
   reading_time?: string | null;
   description: string;
@@ -437,6 +444,7 @@ export interface CaseStudiesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   image?: T;
+  cover_image?: T;
   category?: T;
   reading_time?: T;
   description?: T;

@@ -11,6 +11,7 @@
     "generate:types": "payload generate:types",
     "create-admin": "tsx src/create-admin.ts",
     "migrate:article-authors": "tsx src/migrate-article-authors.ts",
+    "seed:data": "tsx src/seed-data.ts",
     "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {

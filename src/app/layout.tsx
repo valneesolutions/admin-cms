@@ -4,9 +4,6 @@ import React from 'react'
 export const metadata: Metadata = {
   title: 'Valnee Admin CMS',
   description: 'Content management system for Valnee',
-  verification: {
-    google: 'bkY5cOTNTwokWcCN_2UcGhzCEwWJTPwdXtJ0Zva1ywk',
-  },
 }
 
 export default function RootLayout({

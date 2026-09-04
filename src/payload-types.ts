@@ -72,6 +72,7 @@ export interface Config {
     blogs: Blog;
     'article-authors': ArticleAuthor;
     'case-studies': CaseStudy;
+    'gsc-connections': GscConnection;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,6 +85,7 @@ export interface Config {
     blogs: BlogsSelect<false> | BlogsSelect<true>;
     'article-authors': ArticleAuthorsSelect<false> | ArticleAuthorsSelect<true>;
     'case-studies': CaseStudiesSelect<false> | CaseStudiesSelect<true>;
+    'gsc-connections': GscConnectionsSelect<false> | GscConnectionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -273,6 +275,21 @@ export interface CaseStudy {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gsc-connections".
+ */
+export interface GscConnection {
+  id: number;
+  user: number | User;
+  googleAccountEmail: string;
+  propertyUrl: string;
+  refreshToken: string;
+  accessToken?: string | null;
+  tokenExpiry?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -314,6 +331,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'case-studies';
         value: number | CaseStudy;
+      } | null)
+    | ({
+        relationTo: 'gsc-connections';
+        value: number | GscConnection;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -461,6 +482,20 @@ export interface CaseStudiesSelect<T extends boolean = true> {
   author_image?: T;
   is_active?: T;
   publishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gsc-connections_select".
+ */
+export interface GscConnectionsSelect<T extends boolean = true> {
+  user?: T;
+  googleAccountEmail?: T;
+  propertyUrl?: T;
+  refreshToken?: T;
+  accessToken?: T;
+  tokenExpiry?: T;
   updatedAt?: T;
   createdAt?: T;
 }

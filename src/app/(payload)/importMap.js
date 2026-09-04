@@ -5,6 +5,8 @@ import { CaseStudyLiveMarkdownPreview as CaseStudyLiveMarkdownPreview_16d19b613f
 import { CaseStudyPreviewTabs as CaseStudyPreviewTabs_c8278ff3668f416a04c18bd0a4da7c1f } from '@/components/CaseStudyPreviewTabs'
 import { Icon as Icon_e00be77569adc7e0875792737886662b } from '@/components/AdminGraphics'
 import { Logo as Logo_e00be77569adc7e0875792737886662b } from '@/components/AdminGraphics'
+import { GSCInsightsView as GSCInsightsView_gsc_insights_view } from '@/components/GSCInsightsView'
+import { GSCInsightsNavItem as GSCInsightsNavItem_gsc_insights_nav } from '@/components/GSCInsightsNavItem'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_ab83ff7e88da8d3530831f296ec4756a } from '@payloadcms/ui/rsc'
 
@@ -16,6 +18,8 @@ export const importMap = {
   "@/components/CaseStudyPreviewTabs#CaseStudyPreviewTabs": CaseStudyPreviewTabs_c8278ff3668f416a04c18bd0a4da7c1f,
   "@/components/AdminGraphics#Icon": Icon_e00be77569adc7e0875792737886662b,
   "@/components/AdminGraphics#Logo": Logo_e00be77569adc7e0875792737886662b,
+  "@/components/GSCInsightsView#GSCInsightsView": GSCInsightsView_gsc_insights_view,
+  "@/components/GSCInsightsNavItem#GSCInsightsNavItem": GSCInsightsNavItem_gsc_insights_nav,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@payloadcms/ui/rsc#CollectionCards": CollectionCards_ab83ff7e88da8d3530831f296ec4756a
 }

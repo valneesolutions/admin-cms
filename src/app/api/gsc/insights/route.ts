@@ -98,6 +98,15 @@ export async function GET(request: Request) {
       getGSCTopPages({ ...queryOpts, rowLimit: 20 }),
     ]);
 
+    console.log("GSC Insights Query Result:", {
+      property: connection.propertyUrl,
+      startDate,
+      endDate,
+      dailyRowsCount: dailyRows.length,
+      topQueriesCount: topQueriesRows.length,
+      topPagesCount: topPagesRows.length,
+    });
+
     // Calculate aggregate metrics
     let totalClicks = 0;
     let totalImpressions = 0;

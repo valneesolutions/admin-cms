@@ -21,6 +21,7 @@
     "@payloadcms/storage-s3": "3.69.0",
     "@payloadcms/ui": "3.69.0",
     "@t3-oss/env-nextjs": "^0.13.10",
+    "ajv": "^8.17.1",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "googleapis": "^178.0.0",
@@ -48,6 +49,12 @@
     "typescript": "^5"
   },
   "overrides": {
-    "undici": "6.19.2"
+    "undici": "6.19.2",
+    "ajv": "^8.17.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "ajv": "^8.17.1"
+    }
   }
 }

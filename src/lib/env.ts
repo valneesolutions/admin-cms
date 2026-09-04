@@ -11,6 +11,7 @@ export const env = createEnv({
         PAYLOAD_SECRET: z.string().min(1),
         CMS_SEED_ADMIN_EMAIL: z.email(),
         CMS_SEED_ADMIN_PASSWORD: z.string().min(1),
+        GOOGLE_SEARCH_CONSOLE_PROPERTY_URL: z.string().min(1),
     },
     client: {},
     runtimeEnv: {
@@ -18,5 +19,6 @@ export const env = createEnv({
         PAYLOAD_SECRET: process.env.PAYLOAD_SECRET,
         CMS_SEED_ADMIN_EMAIL: process.env.CMS_SEED_ADMIN_EMAIL,
         CMS_SEED_ADMIN_PASSWORD: process.env.CMS_SEED_ADMIN_PASSWORD,
+        GOOGLE_SEARCH_CONSOLE_PROPERTY_URL: process.env.GOOGLE_SEARCH_CONSOLE_PROPERTY_URL,
     },
 })

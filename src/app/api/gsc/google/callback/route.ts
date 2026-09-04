@@ -231,9 +231,13 @@ export async function GET(request: Request) {
     );
     clearStateCookie(response);
     return response;
-  } catch {
+  } catch (err: unknown) {
+    console.error("GSC OAuth Callback Error:", err);
+    const details = err instanceof Error ? err.message : "";
     return getSafeError(
-      "Google Search Console connection could not be completed.",
+      details
+        ? `Google Search Console connection failed: ${details}`
+        : "Google Search Console connection could not be completed.",
       500,
       true,
     );

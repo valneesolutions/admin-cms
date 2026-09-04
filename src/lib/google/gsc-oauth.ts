@@ -1,6 +1,10 @@
 import { google } from "googleapis";
 
-const GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
+const GSC_SCOPES = [
+  "https://www.googleapis.com/auth/webmasters.readonly",
+  "https://www.googleapis.com/auth/userinfo.email",
+  "openid",
+];
 
 export function getGoogleOAuthClient() {
   return new google.auth.OAuth2(
@@ -16,7 +20,7 @@ export function getGoogleAuthorizationUrl(state: string) {
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    scope: [GSC_SCOPE],
+    scope: GSC_SCOPES,
     include_granted_scopes: true,
     state,
   });

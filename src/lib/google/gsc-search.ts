@@ -157,6 +157,13 @@ export async function queryGSCSearchAnalytics(
       version: "v1",
       auth: oauthClient,
     });
+    console.log("Querying GSC API with options:", {
+      siteUrl: connection.propertyUrl,
+      startDate: options.startDate,
+      endDate: options.endDate,
+      dimensions,
+    });
+
     const response = await searchConsole.searchanalytics.query({
       siteUrl: connection.propertyUrl,
       requestBody: {
@@ -169,8 +176,15 @@ export async function queryGSCSearchAnalytics(
       },
     });
 
+    console.log("GSC API Response Data:", {
+      rowCount: response.data.rows?.length ?? 0,
+      rowsSample: response.data.rows?.slice(0, 2),
+      aggregationType: response.data.responseAggregationType,
+    });
+
     return normalizeRows(response.data.rows ?? [], dimensions);
   } catch (err: unknown) {
+    console.error("GSC Query Error:", err);
     const message = err instanceof Error ? err.message : "";
     if (
       message.includes("invalid_grant") ||

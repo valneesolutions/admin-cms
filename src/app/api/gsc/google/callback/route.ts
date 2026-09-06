@@ -173,6 +173,8 @@ export async function GET(request: Request) {
     const sitesResponse = await searchConsole.sites.list();
     const siteEntries = sitesResponse.data.siteEntry ?? [];
 
+    console.log("Accessible GSC Sites for this Google Account:", siteEntries);
+
     const configuredPropertyUrl = env.GOOGLE_SEARCH_CONSOLE_PROPERTY_URL.trim();
     const normalizedConfigured = normalizePropertyUrl(configuredPropertyUrl);
 

@@ -1,4 +1,11 @@
-import "server-only";
+if (process.env.NODE_ENV !== "test") {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("server-only");
+  } catch {
+    // Ignore in non-Next environments
+  }
+}
 
 import { google } from "googleapis";
 import { getPayload } from "payload";
@@ -9,10 +16,22 @@ import type { GscConnection } from "@/payload-types";
 
 const DEFAULT_ROW_LIMIT = 100;
 const DEFAULT_SEARCH_TYPE = "web";
-const SEARCH_ANALYTICS_DIMENSIONS = ["date", "query", "page"] as const;
+const SEARCH_ANALYTICS_DIMENSIONS = [
+  "date",
+  "query",
+  "page",
+  "device",
+  "country",
+] as const;
 
 export type GSCSearchDimension = (typeof SEARCH_ANALYTICS_DIMENSIONS)[number];
 export type GSCId = string | number;
+
+export type GSCDimensionFilter = {
+  dimension: "query" | "page" | "device" | "country";
+  operator?: "equals" | "contains" | "notEquals" | "notContains";
+  expression: string;
+};
 
 export type GSCSearchAnalyticsOptions = {
   userId: GSCId;
@@ -22,13 +41,16 @@ export type GSCSearchAnalyticsOptions = {
   dimensions?: GSCSearchDimension[];
   rowLimit?: number;
   startRow?: number;
-  searchType?: "web";
+  searchType?: "web" | "image" | "video" | "news";
+  filters?: GSCDimensionFilter[];
 };
 
 export type GSCSearchAnalyticsRow = {
   date?: string;
   query?: string;
   page?: string;
+  device?: string;
+  country?: string;
   clicks: number;
   impressions: number;
   ctr: number;
@@ -59,16 +81,15 @@ function assertValidDate(value: string, name: string) {
 function validateQueryOptions(options: GSCSearchAnalyticsOptions) {
   if (
     options.dimensions !== undefined &&
-    (options.dimensions.length === 0 ||
-      options.dimensions.some(
-        (dimension) =>
-          !SEARCH_ANALYTICS_DIMENSIONS.includes(
-            dimension as (typeof SEARCH_ANALYTICS_DIMENSIONS)[number],
-          ),
-      ))
+    options.dimensions.some(
+      (dimension) =>
+        !SEARCH_ANALYTICS_DIMENSIONS.includes(
+          dimension as (typeof SEARCH_ANALYTICS_DIMENSIONS)[number],
+        ),
+    )
   ) {
     throw new GSCServiceError(
-      "dimensions must contain only date, query, or page.",
+      "dimensions must contain only date, query, page, device, or country.",
     );
   }
 
@@ -157,11 +178,26 @@ export async function queryGSCSearchAnalytics(
       version: "v1",
       auth: oauthClient,
     });
+
+    const dimensionFilterGroups = options.filters?.length
+      ? [
+          {
+            filters: options.filters.map((f) => ({
+              dimension: f.dimension,
+              operator: f.operator || "equals",
+              expression: f.expression,
+            })),
+          },
+        ]
+      : undefined;
+
     console.log("Querying GSC API with options:", {
       siteUrl: connection.propertyUrl,
       startDate: options.startDate,
       endDate: options.endDate,
       dimensions,
+      searchType: options.searchType ?? DEFAULT_SEARCH_TYPE,
+      dimensionFilterGroups,
     });
 
     const response = await searchConsole.searchanalytics.query({
@@ -169,16 +205,16 @@ export async function queryGSCSearchAnalytics(
       requestBody: {
         startDate: options.startDate,
         endDate: options.endDate,
-        dimensions,
+        dimensions: dimensions.length > 0 ? dimensions : undefined,
         rowLimit: options.rowLimit ?? DEFAULT_ROW_LIMIT,
         startRow: options.startRow ?? 0,
         searchType: options.searchType ?? DEFAULT_SEARCH_TYPE,
+        dimensionFilterGroups,
       },
     });
 
     console.log("GSC API Response Data:", {
       rowCount: response.data.rows?.length ?? 0,
-      rowsSample: response.data.rows?.slice(0, 2),
       aggregationType: response.data.responseAggregationType,
     });
 
@@ -200,10 +236,67 @@ export async function queryGSCSearchAnalytics(
   }
 }
 
-export function getGSCDailyPerformance(
+export function fillAndSortDailyPerformance(
+  rows: GSCSearchAnalyticsRow[],
+  startDate: string,
+  endDate: string,
+): GSCSearchAnalyticsRow[] {
+  const rowMap = new Map<string, GSCSearchAnalyticsRow>();
+  for (const row of rows) {
+    if (row.date) {
+      rowMap.set(row.date, row);
+    }
+  }
+
+  const result: GSCSearchAnalyticsRow[] = [];
+  const curr = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+
+  while (curr <= end) {
+    const dateStr = curr.toISOString().slice(0, 10);
+    const existing = rowMap.get(dateStr);
+    if (existing) {
+      result.push(existing);
+    } else {
+      result.push({
+        date: dateStr,
+        clicks: 0,
+        impressions: 0,
+        ctr: 0,
+        position: 0,
+      });
+    }
+    curr.setUTCDate(curr.getUTCDate() + 1);
+  }
+
+  result.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  return result;
+}
+
+export async function getGSCDailyPerformance(
   options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
-) {
-  return queryGSCSearchAnalytics({ ...options, dimensions: ["date"] });
+): Promise<GSCSearchAnalyticsRow[]> {
+  const rows = await queryGSCSearchAnalytics({
+    ...options,
+    dimensions: ["date"],
+    rowLimit: 1000,
+  });
+  return fillAndSortDailyPerformance(rows, options.startDate, options.endDate);
+}
+
+export async function getGSCOverviewSummary(
+  options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+): Promise<{ clicks: number; impressions: number; ctr: number; position: number }> {
+  const rows = await queryGSCSearchAnalytics({ ...options, dimensions: [] });
+  if (rows.length > 0) {
+    return {
+      clicks: rows[0].clicks,
+      impressions: rows[0].impressions,
+      ctr: rows[0].ctr,
+      position: rows[0].position,
+    };
+  }
+  return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
 }
 
 export function getGSCTopQueries(
@@ -216,4 +309,30 @@ export function getGSCTopPages(
   options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
 ) {
   return queryGSCSearchAnalytics({ ...options, dimensions: ["page"] });
+}
+
+export function getGSCTopDevices(
+  options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+) {
+  return queryGSCSearchAnalytics({ ...options, dimensions: ["device"] });
+}
+
+export function getGSCTopCountries(
+  options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+) {
+  return queryGSCSearchAnalytics({ ...options, dimensions: ["country"] });
+}
+
+export async function getGSCStrikingDistance(
+  options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+): Promise<GSCSearchAnalyticsRow[]> {
+  const rows = await queryGSCSearchAnalytics({
+    ...options,
+    dimensions: ["query", "page"],
+    rowLimit: 1000,
+  });
+
+  const striking = rows.filter((r) => r.position >= 5.0 && r.position <= 20.0);
+  striking.sort((a, b) => b.impressions - a.impressions);
+  return striking;
 }

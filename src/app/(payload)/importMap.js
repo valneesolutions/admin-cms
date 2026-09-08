@@ -7,7 +7,7 @@ import { Icon as Icon_e00be77569adc7e0875792737886662b } from '@/components/Admi
 import { Logo as Logo_e00be77569adc7e0875792737886662b } from '@/components/AdminGraphics'
 import { GSCInsightsNavItem as GSCInsightsNavItem_0f78ba6e3b277923468f86797c8a15cd } from '@/components/GSCInsightsNavItem'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
-import { GSCInsightsView as GSCInsightsView_aecb29c67dd5f680f3ce04913de7e8b6 } from '@/components/GSCInsightsView'
+import { GSCInsightsShell as GSCInsightsShell_8bb5728f60f230af2e5d488ca0e7b023 } from '@/components/GSCInsightsShell'
 import { CollectionCards as CollectionCards_ab83ff7e88da8d3530831f296ec4756a } from '@payloadcms/ui/rsc'
 
 export const importMap = {
@@ -20,6 +20,6 @@ export const importMap = {
   "@/components/AdminGraphics#Logo": Logo_e00be77569adc7e0875792737886662b,
   "@/components/GSCInsightsNavItem#GSCInsightsNavItem": GSCInsightsNavItem_0f78ba6e3b277923468f86797c8a15cd,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
-  "@/components/GSCInsightsView#GSCInsightsView": GSCInsightsView_aecb29c67dd5f680f3ce04913de7e8b6,
+  "@/components/GSCInsightsShell#GSCInsightsShell": GSCInsightsShell_8bb5728f60f230af2e5d488ca0e7b023,
   "@payloadcms/ui/rsc#CollectionCards": CollectionCards_ab83ff7e88da8d3530831f296ec4756a
 }

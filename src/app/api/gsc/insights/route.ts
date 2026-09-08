@@ -11,6 +11,7 @@ import {
   getGSCTopDevices,
   getGSCTopPages,
   getGSCTopQueries,
+  DEFAULT_MAX_TOTAL_ROWS,
   GSCDimensionFilter,
   GSCServiceError,
 } from "@/lib/google/gsc-search";
@@ -128,9 +129,13 @@ export async function GET(request: Request) {
     const pageFilterParam = url.searchParams.get("pageFilter");
     const queryFilterParam = url.searchParams.get("queryFilter");
 
+    // rowLimit caps the TOTAL rows fetched for the query/page/striking tables
+    // (the library pages through Google's API 25,000 rows per request).
+    // Defaults to the maximum so the tables are not truncated to an
+    // arbitrary first batch.
     const rowLimit = rowLimitParam
-      ? Math.max(10, Math.min(25000, parseInt(rowLimitParam, 10) || 100))
-      : 100;
+      ? Math.max(10, Math.min(DEFAULT_MAX_TOTAL_ROWS, parseInt(rowLimitParam, 10) || DEFAULT_MAX_TOTAL_ROWS))
+      : DEFAULT_MAX_TOTAL_ROWS;
 
     const validSearchTypes = ["web", "image", "video", "news"] as const;
     const searchType = validSearchTypes.includes(searchTypeParam as (typeof validSearchTypes)[number])
@@ -217,9 +222,10 @@ export async function GET(request: Request) {
       getGSCOverviewSummary(queryOpts),
       getGSCOverviewSummary(prevQueryOpts).catch(() => ({ clicks: 0, impressions: 0, ctr: 0, position: 0 })),
       getGSCDailyPerformance(queryOpts),
-      getGSCTopQueries({ ...queryOpts, rowLimit }),
-      getGSCTopPages({ ...queryOpts, rowLimit }),
-      getGSCStrikingDistance({ ...queryOpts, rowLimit: 500 }),
+      getGSCTopQueries(queryOpts, { maxTotalRows: rowLimit }),
+      getGSCTopPages(queryOpts, { maxTotalRows: rowLimit }),
+      // Fetch all query/page rows, filter to positions 5-20, THEN cap.
+      getGSCStrikingDistance(queryOpts, { maxTotalRows: rowLimit, finalLimit: rowLimit }),
       getGSCTopDevices(queryOpts),
       getGSCTopCountries({ ...queryOpts, rowLimit: 100 }),
     ]);
@@ -299,6 +305,16 @@ export async function GET(request: Request) {
       };
     });
 
+    // Table metadata so the UI knows whether it is holding the complete row
+    // set or only up to the configured cap (real API pagination is done
+    // server-side in gsc-search.ts; the tables here carry every fetched row).
+    const tableMeta = (rows: unknown[], cap: number) => ({
+      totalRows: rows.length,
+      hasMore: rows.length >= cap,
+      rowLimit: cap,
+      startRow: 0,
+    });
+
     return NextResponse.json({
       connected: true,
       property: connection.propertyUrl,
@@ -308,6 +324,11 @@ export async function GET(request: Request) {
         endDate,
       },
       searchType,
+      // Overall metrics come from Google's unfiltered (no-dimension) totals.
+      // Query-level rows exclude anonymized rare queries, so the sum of
+      // visible query clicks can legitimately be lower than summary.clicks.
+      totalsNote:
+        "Overall totals include anonymized queries that Google withholds for privacy, so the sum of query-level rows can be lower than the summary metrics.",
       summary: {
         ...summary,
         clicksChange: Number(clicksChange.toFixed(1)),
@@ -321,6 +342,11 @@ export async function GET(request: Request) {
       topPages: topPagesRows,
       topDevices: formattedDevices,
       topCountries: formattedCountries,
+      metadata: {
+        strikingDistance: tableMeta(strikingDistanceRows, rowLimit),
+        topQueries: tableMeta(topQueriesRows, rowLimit),
+        topPages: tableMeta(topPagesRows, rowLimit),
+      },
     });
   } catch (err: unknown) {
     if (err instanceof GSCServiceError) {

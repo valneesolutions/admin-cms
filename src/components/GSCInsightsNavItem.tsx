@@ -18,7 +18,7 @@ export const GSCInsightsNavItem: React.FC = () => {
           alignItems: "center",
           gap: "10px",
           padding: "10px 16px",
-          color: isActive ? "var(--brand-primary, #6a00ff)" : "rgba(255, 255, 255, 0.7)",
+          color: isActive ? "var(--brand-primary, #6a00ff)" : "var(--theme-elevation-800, currentColor)",
           fontWeight: isActive ? 600 : 500,
           fontSize: "14px",
           textDecoration: "none",

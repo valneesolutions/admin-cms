@@ -81,23 +81,13 @@ function clearStateCookie(response: NextResponse) {
   });
 }
 
-function normalizePropertyUrl(rawUrl: string): string {
-  const url = rawUrl.trim();
-  if (url.startsWith("sc-domain:")) {
-    return `sc-domain:${url.slice(10).toLowerCase()}`;
+function extractCleanDomain(rawUrl: string): string {
+  let cleaned = rawUrl.trim().toLowerCase();
+  if (cleaned.startsWith("sc-domain:")) {
+    cleaned = cleaned.slice(10);
   }
-  try {
-    const parsed = new URL(url);
-    parsed.hostname = parsed.hostname.toLowerCase();
-    parsed.protocol = parsed.protocol.toLowerCase();
-    let pathname = parsed.pathname;
-    if (!pathname || pathname === "") {
-      pathname = "/";
-    }
-    return `${parsed.protocol}//${parsed.host}${pathname}${parsed.search}${parsed.hash}`;
-  } catch {
-    return url.toLowerCase();
-  }
+  cleaned = cleaned.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  return cleaned;
 }
 
 export async function GET(request: Request) {
@@ -164,8 +154,6 @@ export async function GET(request: Request) {
       );
     }
 
-
-
     const searchConsole = google.searchconsole({
       version: "v1",
       auth: oauthClient,
@@ -176,12 +164,26 @@ export async function GET(request: Request) {
     console.log("Accessible GSC Sites for this Google Account:", siteEntries);
 
     const configuredPropertyUrl = env.GOOGLE_SEARCH_CONSOLE_PROPERTY_URL.trim();
-    const normalizedConfigured = normalizePropertyUrl(configuredPropertyUrl);
+    const configuredDomain = extractCleanDomain(configuredPropertyUrl);
 
-    const matchingEntry = siteEntries.find((entry) => {
+    // 1. Check domain property format (sc-domain:domain.com) first
+    let matchingEntry = siteEntries.find((entry) => {
       if (!entry.siteUrl) return false;
-      return normalizePropertyUrl(entry.siteUrl) === normalizedConfigured;
+      return entry.siteUrl.toLowerCase() === `sc-domain:${configuredDomain}`;
     });
+
+    // 2. Check domain match (e.g. https://www.valnee.com or valnee.com)
+    if (!matchingEntry) {
+      matchingEntry = siteEntries.find((entry) => {
+        if (!entry.siteUrl) return false;
+        return extractCleanDomain(entry.siteUrl) === configuredDomain;
+      });
+    }
+
+    // 3. Fallback: If only 1 site entry exists, use it
+    if (!matchingEntry && siteEntries.length > 0) {
+      matchingEntry = siteEntries[0];
+    }
 
     if (!matchingEntry || !matchingEntry.siteUrl) {
       return getSafeError(
@@ -229,7 +231,7 @@ export async function GET(request: Request) {
     }
 
     const response = NextResponse.redirect(
-      new URL(PAYLOAD_ADMIN_ROUTE, request.url),
+      new URL(`${PAYLOAD_ADMIN_ROUTE}/gsc-insights`, request.url),
     );
     clearStateCookie(response);
     return response;

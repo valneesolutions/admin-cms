@@ -62,9 +62,8 @@ export default buildConfig({
       },
       views: {
         GSCInsights: {
-          Component: "@/components/GSCInsightsView#GSCInsightsView",
+          Component: "@/components/GSCInsightsShell#GSCInsightsShell",
           path: "/gsc-insights",
-          exact: true,
           meta: {
             title: "GSC Insights - Valnee Admin",
           },

@@ -23,6 +23,13 @@ interface GSCRow {
   position: number;
 }
 
+interface TableMeta {
+  totalRows: number;
+  hasMore: boolean;
+  rowLimit: number;
+  startRow: number;
+}
+
 interface InsightsResponse {
   connected: boolean;
   property?: string;
@@ -31,6 +38,7 @@ interface InsightsResponse {
     startDate: string;
     endDate: string;
   };
+  totalsNote?: string;
   summary?: {
     clicks: number;
     clicksChange?: number;
@@ -47,6 +55,11 @@ interface InsightsResponse {
   topPages?: GSCRow[];
   topDevices?: GSCRow[];
   topCountries?: GSCRow[];
+  metadata?: {
+    strikingDistance?: TableMeta;
+    topQueries?: TableMeta;
+    topPages?: TableMeta;
+  };
   error?: string;
 }
 
@@ -101,7 +114,9 @@ export function GSCInsightsView() {
     const startDate = start.toISOString().slice(0, 10);
     const endDate = end.toISOString().slice(0, 10);
 
-    let url = `/api/gsc/insights?startDate=${startDate}&endDate=${endDate}&rowLimit=1000`;
+    // rowLimit caps the total rows the server fetches from Google's API
+    // (server pages through requests of 25,000 rows each).
+    let url = `/api/gsc/insights?startDate=${startDate}&endDate=${endDate}&rowLimit=50000`;
     if (selectedDevice !== "all") {
       url += `&deviceFilter=${encodeURIComponent(selectedDevice)}`;
     }
@@ -401,6 +416,16 @@ export function GSCInsightsView() {
   const strikingCount = data?.strikingDistance?.length || 0;
   const countriesList = data?.topCountries || [];
 
+  // The server already fetched every available row (up to its cap), so this
+  // pagination slices the complete dataset rather than a truncated first batch.
+  const activeTableMeta =
+    activeTab === "striking"
+      ? data?.metadata?.strikingDistance
+      : activeTab === "queries"
+        ? data?.metadata?.topQueries
+        : data?.metadata?.topPages;
+  const tableHasMore = activeTableMeta?.hasMore ?? false;
+
   const startItemIdx = totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
   const endItemIdx = Math.min(currentPage * rowsPerPage, totalItems);
 
@@ -555,7 +580,7 @@ export function GSCInsightsView() {
               type="button"
               className="gsc-export-button"
               onClick={handleExportCSV}
-              title="Export table data to CSV file"
+              title="Export all loaded table results to CSV file"
             >
               <svg
                 width="14"
@@ -809,6 +834,11 @@ export function GSCInsightsView() {
         <div className="gsc-footer-row">
           <div>
             {startItemIdx}-{endItemIdx} of {totalItems}
+            {tableHasMore && (
+              <span style={{ marginLeft: "8px" }}>
+                (loaded {totalItems} rows — more are available on the server)
+              </span>
+            )}
           </div>
 
           <div className="gsc-footer-pagination">

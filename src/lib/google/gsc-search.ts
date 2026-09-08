@@ -24,6 +24,13 @@ const SEARCH_ANALYTICS_DIMENSIONS = [
   "country",
 ] as const;
 
+// Google accepts at most 25,000 rows per searchAnalytics.query request.
+export const GSC_MAX_PAGE_SIZE = 25000;
+// Upper bound on total rows fetched across pages so "fetch all" queries
+// cannot run away; every page adds at least one row, so the loop terminates.
+export const DEFAULT_MAX_TOTAL_ROWS = 50000;
+
+
 export type GSCSearchDimension = (typeof SEARCH_ANALYTICS_DIMENSIONS)[number];
 export type GSCId = string | number;
 
@@ -56,6 +63,38 @@ export type GSCSearchAnalyticsRow = {
   ctr: number;
   position: number;
 };
+
+// The exact request body sent to searchAnalytics.query for one page.
+export type GSCQueryRequest = {
+  siteUrl: string;
+  startDate: string;
+  endDate: string;
+  dimensions?: GSCSearchDimension[];
+  rowLimit: number;
+  startRow: number;
+  searchType: "web" | "image" | "video" | "news";
+  dimensionFilterGroups?: Array<{
+    filters: Array<{
+      dimension: GSCDimensionFilter["dimension"];
+      operator: NonNullable<GSCDimensionFilter["operator"]>;
+      expression: string;
+    }>;
+  }>;
+};
+
+export type GSCPaginationConfig = {
+  // Rows per Google API request (capped at Google's 25,000 max).
+  pageSize?: number;
+  // Hard cap on total rows fetched across all pages.
+  maxTotalRows?: number;
+  // Final cap applied AFTER fetching/filtering (e.g. striking distance).
+  finalLimit?: number;
+  // Test seam: replaces the Google API call for a single page.
+  executeQuery?: (
+    request: GSCQueryRequest,
+  ) => Promise<GSCSearchAnalyticsRow[]>;
+};
+
 
 export class GSCServiceError extends Error {
   constructor(message: string) {
@@ -142,35 +181,68 @@ function normalizeRows(
   });
 }
 
-export async function queryGSCSearchAnalytics(
-  options: GSCSearchAnalyticsOptions,
-): Promise<GSCSearchAnalyticsRow[]> {
-  validateQueryOptions(options);
-  const dimensions = options.dimensions ?? ["date"];
-  let connection: GscConnection | undefined;
-
+async function loadGSCConnection(
+  userId: GSCId,
+  connectionId: GSCId,
+): Promise<GscConnection> {
   try {
     const payload = await getPayload({ config });
     const connectionResult = await payload.find({
       collection: "gsc-connections",
       where: {
         and: [
-          { id: { equals: options.connectionId } },
-          { user: { equals: options.userId } },
+          { id: { equals: connectionId } },
+          { user: { equals: userId } },
         ],
       },
       limit: 1,
       overrideAccess: true,
     });
-    connection = connectionResult.docs[0];
-  } catch {
+    const connection = connectionResult.docs[0];
+    if (!connection) {
+      throw new GSCServiceError("GSC connection was not found for this user.");
+    }
+    return connection;
+  } catch (err) {
+    if (err instanceof GSCServiceError) throw err;
     throw new GSCServiceError("GSC connection could not be loaded.");
   }
+}
 
-  if (!connection) {
-    throw new GSCServiceError("GSC connection was not found for this user.");
-  }
+function buildGSCQueryRequest(
+  options: GSCSearchAnalyticsOptions,
+  dimensions: GSCSearchDimension[],
+  page: { rowLimit: number; startRow: number },
+  siteUrl?: string,
+): GSCQueryRequest {
+  const dimensionFilterGroups = options.filters?.length
+    ? [
+        {
+          filters: options.filters.map((f) => ({
+            dimension: f.dimension,
+            operator: f.operator || "equals",
+            expression: f.expression,
+          })),
+        },
+      ]
+    : undefined;
 
+  return {
+    siteUrl: siteUrl ?? "",
+    startDate: options.startDate,
+    endDate: options.endDate,
+    dimensions: dimensions.length > 0 ? dimensions : undefined,
+    rowLimit: page.rowLimit,
+    startRow: page.startRow,
+    searchType: options.searchType ?? DEFAULT_SEARCH_TYPE,
+    dimensionFilterGroups,
+  };
+}
+
+async function executeGSCQuery(
+  connection: GscConnection,
+  request: GSCQueryRequest,
+): Promise<GSCSearchAnalyticsRow[]> {
   try {
     const oauthClient = getGoogleOAuthClient();
     oauthClient.setCredentials({ refresh_token: connection.refreshToken });
@@ -179,38 +251,24 @@ export async function queryGSCSearchAnalytics(
       auth: oauthClient,
     });
 
-    const dimensionFilterGroups = options.filters?.length
-      ? [
-          {
-            filters: options.filters.map((f) => ({
-              dimension: f.dimension,
-              operator: f.operator || "equals",
-              expression: f.expression,
-            })),
-          },
-        ]
-      : undefined;
+    const requestBody = {
+      startDate: request.startDate,
+      endDate: request.endDate,
+      dimensions: request.dimensions,
+      rowLimit: request.rowLimit,
+      startRow: request.startRow,
+      searchType: request.searchType,
+      dimensionFilterGroups: request.dimensionFilterGroups,
+    };
 
     console.log("Querying GSC API with options:", {
       siteUrl: connection.propertyUrl,
-      startDate: options.startDate,
-      endDate: options.endDate,
-      dimensions,
-      searchType: options.searchType ?? DEFAULT_SEARCH_TYPE,
-      dimensionFilterGroups,
+      ...requestBody,
     });
 
     const response = await searchConsole.searchanalytics.query({
       siteUrl: connection.propertyUrl,
-      requestBody: {
-        startDate: options.startDate,
-        endDate: options.endDate,
-        dimensions: dimensions.length > 0 ? dimensions : undefined,
-        rowLimit: options.rowLimit ?? DEFAULT_ROW_LIMIT,
-        startRow: options.startRow ?? 0,
-        searchType: options.searchType ?? DEFAULT_SEARCH_TYPE,
-        dimensionFilterGroups,
-      },
+      requestBody,
     });
 
     console.log("GSC API Response Data:", {
@@ -218,7 +276,10 @@ export async function queryGSCSearchAnalytics(
       aggregationType: response.data.responseAggregationType,
     });
 
-    return normalizeRows(response.data.rows ?? [], dimensions);
+    return normalizeRows(
+      response.data.rows ?? [],
+      request.dimensions ?? [],
+    );
   } catch (err: unknown) {
     console.error("GSC Query Error:", err);
     const message = err instanceof Error ? err.message : "";
@@ -235,6 +296,76 @@ export async function queryGSCSearchAnalytics(
     throw new GSCServiceError("Google Search Console query failed.");
   }
 }
+
+export async function queryGSCSearchAnalytics(
+  options: GSCSearchAnalyticsOptions,
+): Promise<GSCSearchAnalyticsRow[]> {
+  validateQueryOptions(options);
+  const dimensions = options.dimensions ?? ["date"];
+  const connection = await loadGSCConnection(
+    options.userId,
+    options.connectionId,
+  );
+  const request = buildGSCQueryRequest(
+    options,
+    dimensions,
+    {
+      rowLimit: options.rowLimit ?? DEFAULT_ROW_LIMIT,
+      startRow: options.startRow ?? 0,
+    },
+    connection.propertyUrl,
+  );
+  return executeGSCQuery(connection, request);
+}
+
+/**
+ * Fetches every available row for a dimensioned query by paging through the
+ * Search Console API with `startRow` until a short page, the configured
+ * total-row cap, or the page-count guard ends the loop.
+ */
+export async function fetchAllGSCRows(
+  options: GSCSearchAnalyticsOptions,
+  pagination?: GSCPaginationConfig,
+): Promise<GSCSearchAnalyticsRow[]> {
+  validateQueryOptions(options);
+  const dimensions = options.dimensions ?? ["date"];
+  const pageSize = Math.min(
+    Math.max(1, pagination?.pageSize ?? GSC_MAX_PAGE_SIZE),
+    GSC_MAX_PAGE_SIZE,
+  );
+  const maxTotalRows = Math.max(1, pagination?.maxTotalRows ?? DEFAULT_MAX_TOTAL_ROWS);
+  const maxPages = Math.ceil(maxTotalRows / pageSize);
+
+  const connection = pagination?.executeQuery
+    ? undefined
+    : await loadGSCConnection(options.userId, options.connectionId);
+
+  const allRows: GSCSearchAnalyticsRow[] = [];
+  for (let pageIndex = 0; pageIndex < maxPages; pageIndex++) {
+    const startRow = pageIndex * pageSize;
+    const request = buildGSCQueryRequest(
+      options,
+      dimensions,
+      {
+        rowLimit: pageSize,
+        startRow,
+      },
+      connection?.propertyUrl,
+    );
+
+    const rows = pagination?.executeQuery
+      ? await pagination.executeQuery(request)
+      : await executeGSCQuery(connection!, request);
+
+    allRows.push(...rows);
+
+    // A page with fewer rows than the page size means we reached the end.
+    if (rows.length < pageSize) break;
+  }
+
+  return allRows.slice(0, maxTotalRows);
+}
+
 
 export function fillAndSortDailyPerformance(
   rows: GSCSearchAnalyticsRow[],
@@ -286,8 +417,15 @@ export async function getGSCDailyPerformance(
 
 export async function getGSCOverviewSummary(
   options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+  pagination?: GSCPaginationConfig,
 ): Promise<{ clicks: number; impressions: number; ctr: number; position: number }> {
-  const rows = await queryGSCSearchAnalytics({ ...options, dimensions: [] });
+  // A no-dimension request returns Google's unfiltered totals for the whole
+  // property. Never reconstruct these by summing query/page rows: Google
+  // anonymizes rare queries, so dimensioned rows always undercount.
+  const rows = await fetchAllGSCRows(
+    { ...options, dimensions: [] },
+    { ...pagination, maxTotalRows: 1 },
+  );
   if (rows.length > 0) {
     return {
       clicks: rows[0].clicks,
@@ -299,16 +437,26 @@ export async function getGSCOverviewSummary(
   return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
 }
 
+// Rows come back in Google's ranking order; any caller-side sorting happens
+// after this, so no local reorder is applied here.
 export function getGSCTopQueries(
   options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+  pagination?: GSCPaginationConfig,
 ) {
-  return queryGSCSearchAnalytics({ ...options, dimensions: ["query"] });
+  return fetchAllGSCRows(
+    { ...options, dimensions: ["query"] },
+    pagination,
+  );
 }
 
 export function getGSCTopPages(
   options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+  pagination?: GSCPaginationConfig,
 ) {
-  return queryGSCSearchAnalytics({ ...options, dimensions: ["page"] });
+  return fetchAllGSCRows(
+    { ...options, dimensions: ["page"] },
+    pagination,
+  );
 }
 
 export function getGSCTopDevices(
@@ -325,14 +473,26 @@ export function getGSCTopCountries(
 
 export async function getGSCStrikingDistance(
   options: Omit<GSCSearchAnalyticsOptions, "dimensions">,
+  pagination?: GSCPaginationConfig,
 ): Promise<GSCSearchAnalyticsRow[]> {
-  const rows = await queryGSCSearchAnalytics({
-    ...options,
-    dimensions: ["query", "page"],
-    rowLimit: 1000,
-  });
+  // Fetch the full query/page row set BEFORE filtering, otherwise the position
+  // filter would only see the first page of Google-ranked rows.
+  const rows = await fetchAllGSCRows(
+    { ...options, dimensions: ["query", "page"] },
+    pagination,
+  );
 
-  const striking = rows.filter((r) => r.position >= 5.0 && r.position <= 20.0);
+  const seen = new Set<string>();
+  const striking = rows.filter((r) => {
+    if (r.position < 5.0 || r.position > 20.0) return false;
+    const key = `${r.query || ""}|${r.page || ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   striking.sort((a, b) => b.impressions - a.impressions);
-  return striking;
+
+  return pagination?.finalLimit
+    ? striking.slice(0, pagination.finalLimit)
+    : striking;
 }

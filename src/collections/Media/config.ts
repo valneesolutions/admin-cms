@@ -1,4 +1,6 @@
 import type { CollectionConfig } from 'payload'
+import { getPublicMediaURL } from '@/lib/media-url.ts'
+import { buildSupabasePublicURL } from './lib/public-url.ts'
 import { generateBlurDataURL, isEligibleForBlurDataURL } from './lib/generate-blur-data.ts'
 
 export const Media: CollectionConfig = {
@@ -6,11 +8,40 @@ export const Media: CollectionConfig = {
     access: {
         read: () => true,
     },
+    admin: {
+        defaultColumns: ['filename', 'mediaUrl', 'alt', 'updatedAt'],
+        listSearchableFields: ['filename', 'alt'],
+    },
     fields: [
         {
             name: 'alt',
             type: 'text',
             required: true,
+        },
+        {
+            name: 'mediaUrl',
+            type: 'text',
+            label: 'Media URL',
+            virtual: true,
+            admin: {
+                readOnly: true,
+                description:
+                    'Public Supabase bucket URL. In the list view, click the URL to copy it.',
+                components: {
+                    Cell: '@/collections/Media/MediaUrlCell#MediaUrlCell',
+                },
+            },
+            hooks: {
+                afterRead: [
+                    ({ data }) => {
+                        const filename = data?.filename ?? ''
+                        return (
+                            buildSupabasePublicURL(filename) ||
+                            getPublicMediaURL({ filename })
+                        )
+                    },
+                ],
+            },
         },
         {
             name: 'blurDataUrl',

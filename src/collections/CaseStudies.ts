@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload";
 
+import { normalizeMarkdownContent } from "../lib/normalize-markdown.ts";
+
 export const CaseStudies: CollectionConfig = {
   slug: "case-studies",
   admin: {
@@ -15,6 +17,19 @@ export const CaseStudies: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    beforeValidate: [
+      ({ data }) => {
+        if (!data) return data;
+        // Repair image syntax pasted from external tools (escaped links,
+        // signed Supabase URLs) so published markdown always renders.
+        if (typeof data.content === "string") {
+          data.content = normalizeMarkdownContent(data.content);
+        }
+        return data;
+      },
+    ],
   },
   fields: [
     {
@@ -67,9 +82,19 @@ export const CaseStudies: CollectionConfig = {
     },
     {
       name: "category",
-      type: "text",
-      defaultValue: "Case Study",
-      admin: { width: "50%" },
+      type: "select",
+      hasMany: true,
+      options: [
+        { label: "Popular", value: "popular" },
+        { label: "Latest", value: "latest" },
+        { label: "Featured", value: "featured" },
+        { label: "Trending", value: "trending" },
+        { label: "High Rated", value: "high-rated" },
+      ],
+      admin: {
+        width: "50%",
+        description: "Pick one or more predefined categories.",
+      },
     },
     {
       name: "reading_time",
@@ -94,6 +119,9 @@ export const CaseStudies: CollectionConfig = {
       admin: {
         rows: 20,
         description: "Write your case study here using Markdown.",
+        components: {
+          Field: "@/components/MarkdownEditorField#MarkdownEditorField",
+        },
       },
     },
     {
@@ -114,12 +142,18 @@ export const CaseStudies: CollectionConfig = {
     {
       name: "tags",
       type: "array",
+      label: "Tags",
+      labels: { singular: "Tag", plural: "Tags" },
       fields: [
         {
           name: "tag",
           type: "text",
+          label: "Tag",
         },
       ],
+      admin: {
+        description: "Add any free-form tags you want.",
+      },
     },
     {
       name: "author_name",

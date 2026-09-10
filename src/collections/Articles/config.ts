@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { normalizeBlogSlug, updatePublicationDate, validateBlogSchema } from '../../lib/blog-seo.ts'
+import { normalizeMarkdownContent } from '../../lib/normalize-markdown.ts'
 
 export const Articles: CollectionConfig = {
   slug: 'blogs',
@@ -22,6 +23,11 @@ export const Articles: CollectionConfig = {
     beforeValidate: [
       ({ data }) => {
         if (!data) return data
+        // Repair image syntax pasted from external tools (escaped links,
+        // signed Supabase URLs) so published markdown always renders.
+        if (typeof data.content === 'string') {
+          data.content = normalizeMarkdownContent(data.content)
+        }
         const source = typeof data.slug === 'string' && data.slug ? data.slug : data.title
         if (typeof source === 'string') data.slug = normalizeBlogSlug(source)
         return data
@@ -88,8 +94,19 @@ export const Articles: CollectionConfig = {
     },
     {
       name: 'category',
-      type: 'text',
-      admin: { position: 'sidebar' },
+      type: 'select',
+      hasMany: true,
+      options: [
+        { label: 'Popular', value: 'popular' },
+        { label: 'Latest', value: 'latest' },
+        { label: 'Featured', value: 'featured' },
+        { label: 'Trending', value: 'trending' },
+        { label: 'High Rated', value: 'high-rated' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Pick one or more predefined categories.',
+      },
     },
     {
       name: 'coverImage',
@@ -111,6 +128,9 @@ export const Articles: CollectionConfig = {
       admin: {
         description: 'Write or paste Markdown content. This remains the API body format.',
         rows: 20,
+        components: {
+          Field: '@/components/MarkdownEditorField#MarkdownEditorField',
+        },
       },
     },
     {
@@ -142,30 +162,33 @@ export const Articles: CollectionConfig = {
     },
     {
       name: 'articleSchema',
-      type: 'code',
+      type: 'textarea',
       label: 'Article JSON-LD',
       validate: (value) => validateBlogSchema(value, 'article'),
       admin: {
         position: 'sidebar',
-        language: 'json',
         description: 'Optional schema.org Article, BlogPosting, or NewsArticle JSON-LD.',
       },
     },
     {
       name: 'faqSchema',
-      type: 'code',
+      type: 'textarea',
       label: 'FAQ JSON-LD',
       validate: (value) => validateBlogSchema(value, 'faq'),
       admin: {
         position: 'sidebar',
-        language: 'json',
         description: 'Optional schema.org FAQPage JSON-LD.',
       },
     },
     {
       name: 'tags',
       type: 'array',
-      fields: [{ name: 'tag', type: 'text' }],
+      label: 'Tags',
+      labels: { singular: 'Tag', plural: 'Tags' },
+      fields: [{ name: 'tag', type: 'text', label: 'Tag' }],
+      admin: {
+        description: 'Add any free-form tags you want.',
+      },
     },
     {
       name: 'readingTime',

@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@payloadcms/ui";
 import React, { useEffect, useMemo, useState, useTransition } from "react";
 
 type DatePreset = "7d" | "28d" | "90d" | "180d" | "365d";
@@ -80,6 +81,7 @@ export function GSCInsightsView() {
   const [deviceFilter, setDeviceFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<TabType>("striking");
+  const [disconnecting, setDisconnecting] = useState<boolean>(false);
 
   const [data, setData] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -153,6 +155,29 @@ export function GSCInsightsView() {
   useEffect(() => {
     fetchInsights(preset, deviceFilter, countryFilter);
   }, [preset, deviceFilter, countryFilter]);
+
+  const handleDisconnect = async () => {
+    setDisconnecting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/gsc/google/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.error || "Failed to disconnect Google Search Console.");
+      }
+      toast.success("Google Search Console disconnected.");
+      // Clear local state so the connect screen renders immediately.
+      setData(null);
+      setLoading(true);
+      fetchInsights(preset, deviceFilter, countryFilter);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to disconnect.");
+      setDisconnecting(false);
+    }
+  };
 
   // Set default sort field based on tab
   const handleTabChange = (newTab: TabType) => {
@@ -342,13 +367,24 @@ export function GSCInsightsView() {
           <div className="gsc-error-icon">⚠️</div>
           <h3>Unable to Load Search Console Data</h3>
           <p>{error}</p>
-          <button
-            type="button"
-            className="btn--style-primary gsc-connect-btn"
-            onClick={() => fetchInsights(preset, deviceFilter, countryFilter)}
-          >
-            Retry Connection
-          </button>
+          <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
+            <button
+              type="button"
+              className="btn--style-primary gsc-connect-btn"
+              onClick={() => fetchInsights(preset, deviceFilter, countryFilter)}
+            >
+              Retry Connection
+            </button>
+            <button
+              type="button"
+              className="btn--style-secondary gsc-connect-btn"
+              onClick={handleDisconnect}
+              disabled={disconnecting}
+              title="Sign out of the connected Google account and remove the stored token"
+            >
+              {disconnecting ? "Disconnecting…" : "Disconnect"}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -440,13 +476,25 @@ export function GSCInsightsView() {
           </p>
         </div>
 
-        <a
-          href="/api/gsc/google/connect"
-          className="gsc-change-property-link"
-          title="Reconnect or change Search Console property"
-        >
-          Change property
-        </a>
+        <div className="gsc-header-actions" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <a
+            href="/api/gsc/google/connect"
+            className="gsc-change-property-link"
+            title="Reconnect or change Search Console property"
+          >
+            Change property
+          </a>
+          <button
+            type="button"
+            className="gsc-change-property-link"
+            style={{ color: "var(--theme-error-500, #c0392b)" }}
+            onClick={handleDisconnect}
+            disabled={disconnecting}
+            title={`Sign out of ${data?.googleAccountEmail || "the connected Google account"} and remove the stored token`}
+          >
+            {disconnecting ? "Disconnecting…" : "Disconnect"}
+          </button>
+        </div>
       </div>
 
       {/* 4 Stat Cards Grid */}

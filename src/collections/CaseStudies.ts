@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload";
 
+import { normalizeMarkdownContent } from "../lib/normalize-markdown.ts";
+
 export const CaseStudies: CollectionConfig = {
   slug: "case-studies",
   admin: {
@@ -15,6 +17,19 @@ export const CaseStudies: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    beforeValidate: [
+      ({ data }) => {
+        if (!data) return data;
+        // Repair image syntax pasted from external tools (escaped links,
+        // signed Supabase URLs) so published markdown always renders.
+        if (typeof data.content === "string") {
+          data.content = normalizeMarkdownContent(data.content);
+        }
+        return data;
+      },
+    ],
   },
   fields: [
     {

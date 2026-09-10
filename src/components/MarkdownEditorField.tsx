@@ -15,6 +15,35 @@ type MediaDoc = {
 
 type CaretPosition = { top: number; left: number }
 
+/**
+ * The list drawer machinery runs unguarded `selectedOption.value` lookups in
+ * payload's own code; if it throws there, React unmounts the whole admin and
+ * the user sees "Application error". Confine any such failure to the drawer
+ * so the editor (and the rest of the admin) survives it.
+ */
+class ListDrawerErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean }
+> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props)
+        this.state = { hasError: false }
+    }
+
+    static getDerivedStateFromError() {
+        return { hasError: true }
+    }
+
+    componentDidCatch(error: unknown) {
+        console.error('Media list drawer failed to render:', error)
+    }
+
+    render() {
+        if (this.state.hasError) return null
+        return this.props.children
+    }
+}
+
 const LAYOUT_PROPS = [
     'boxSizing',
     'fontFamily',
@@ -184,7 +213,12 @@ export const MarkdownEditorField: React.FC<TextFieldClientProps> = (props) => {
     const handleSelect = useCallback(
         ({ doc }: { doc: Record<string, unknown> }) => {
             closePopup()
-            insertAtCursor(getMediaImageMarkdown(doc as MediaDoc))
+            const snippet = getMediaImageMarkdown(doc as MediaDoc)
+            if (!snippet) {
+                toast.error('This media item has no usable file URL.')
+                return
+            }
+            insertAtCursor(snippet)
             toast.success(`Inserted ${String((doc as MediaDoc).filename ?? 'image')}`)
         },
         [closePopup, insertAtCursor],
@@ -332,7 +366,9 @@ export const MarkdownEditorField: React.FC<TextFieldClientProps> = (props) => {
                 hidden
                 onChange={handleUpload}
             />
-            <ListDrawer onSelect={handleSelect} enableRowSelections={false} />
+            <ListDrawerErrorBoundary>
+                <ListDrawer onSelect={handleSelect} enableRowSelections={false} />
+            </ListDrawerErrorBoundary>
         </div>
     )
 }

@@ -25,9 +25,11 @@ export function getPublicMediaURL(doc: MediaUrlSource): string {
 
 /** Markdown image snippet for a media doc, e.g. ![alt](public-url). */
 export function getMediaImageMarkdown(doc: MediaUrlSource & { alt?: string | null }): string {
+    const url = getPublicMediaURL(doc)
+    if (!url) return ''
     const alt =
         doc?.alt?.trim() ||
         doc?.filename?.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ') ||
         'image'
-    return `![${alt}](${getPublicMediaURL(doc)})`
+    return `![${alt}](${url})`
 }

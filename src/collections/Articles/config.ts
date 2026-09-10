@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { normalizeBlogSlug, updatePublicationDate, validateBlogSchema } from '../../lib/blog-seo.ts'
+import { normalizeMarkdownContent } from '../../lib/normalize-markdown.ts'
 
 export const Articles: CollectionConfig = {
   slug: 'blogs',
@@ -22,6 +23,11 @@ export const Articles: CollectionConfig = {
     beforeValidate: [
       ({ data }) => {
         if (!data) return data
+        // Repair image syntax pasted from external tools (escaped links,
+        // signed Supabase URLs) so published markdown always renders.
+        if (typeof data.content === 'string') {
+          data.content = normalizeMarkdownContent(data.content)
+        }
         const source = typeof data.slug === 'string' && data.slug ? data.slug : data.title
         if (typeof source === 'string') data.slug = normalizeBlogSlug(source)
         return data
@@ -156,23 +162,21 @@ export const Articles: CollectionConfig = {
     },
     {
       name: 'articleSchema',
-      type: 'code',
+      type: 'textarea',
       label: 'Article JSON-LD',
       validate: (value) => validateBlogSchema(value, 'article'),
       admin: {
         position: 'sidebar',
-        language: 'json',
         description: 'Optional schema.org Article, BlogPosting, or NewsArticle JSON-LD.',
       },
     },
     {
       name: 'faqSchema',
-      type: 'code',
+      type: 'textarea',
       label: 'FAQ JSON-LD',
       validate: (value) => validateBlogSchema(value, 'faq'),
       admin: {
         position: 'sidebar',
-        language: 'json',
         description: 'Optional schema.org FAQPage JSON-LD.',
       },
     },

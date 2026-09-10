@@ -155,6 +155,10 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  /**
+   * Public Supabase bucket URL. In the list view, click the URL to copy it.
+   */
+  mediaUrl?: string | null;
   blurDataUrl?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -185,7 +189,10 @@ export interface Blog {
    */
   publishedAt?: string | null;
   author: number | ArticleAuthor;
-  category?: string | null;
+  /**
+   * Pick one or more predefined categories.
+   */
+  category?: ('popular' | 'latest' | 'featured' | 'trending' | 'high-rated')[] | null;
   coverImage: number | Media;
   /**
    * A short summary for article cards and the SEO preview.
@@ -211,6 +218,9 @@ export interface Blog {
    * Optional schema.org FAQPage JSON-LD.
    */
   faqSchema?: string | null;
+  /**
+   * Add any free-form tags you want.
+   */
   tags?:
     | {
         tag?: string | null;
@@ -251,7 +261,10 @@ export interface CaseStudy {
    * Banner image shown inside the case study page. Leave empty to reuse the thumbnail image.
    */
   cover_image?: (number | null) | Media;
-  category?: string | null;
+  /**
+   * Pick one or more predefined categories.
+   */
+  category?: ('popular' | 'latest' | 'featured' | 'trending' | 'high-rated')[] | null;
   reading_time?: string | null;
   description: string;
   left_description?: string | null;
@@ -260,6 +273,9 @@ export interface CaseStudy {
    */
   content: string;
   page_url?: string | null;
+  /**
+   * Add any free-form tags you want.
+   */
   tags?:
     | {
         tag?: string | null;
@@ -406,6 +422,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  mediaUrl?: T;
   blurDataUrl?: T;
   updatedAt?: T;
   createdAt?: T;

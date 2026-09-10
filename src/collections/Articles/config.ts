@@ -88,8 +88,19 @@ export const Articles: CollectionConfig = {
     },
     {
       name: 'category',
-      type: 'text',
-      admin: { position: 'sidebar' },
+      type: 'select',
+      hasMany: true,
+      options: [
+        { label: 'Popular', value: 'popular' },
+        { label: 'Latest', value: 'latest' },
+        { label: 'Featured', value: 'featured' },
+        { label: 'Trending', value: 'trending' },
+        { label: 'High Rated', value: 'high-rated' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Pick one or more predefined categories.',
+      },
     },
     {
       name: 'coverImage',
@@ -111,6 +122,9 @@ export const Articles: CollectionConfig = {
       admin: {
         description: 'Write or paste Markdown content. This remains the API body format.',
         rows: 20,
+        components: {
+          Field: '@/components/MarkdownEditorField#MarkdownEditorField',
+        },
       },
     },
     {
@@ -165,7 +179,12 @@ export const Articles: CollectionConfig = {
     {
       name: 'tags',
       type: 'array',
-      fields: [{ name: 'tag', type: 'text' }],
+      label: 'Tags',
+      labels: { singular: 'Tag', plural: 'Tags' },
+      fields: [{ name: 'tag', type: 'text', label: 'Tag' }],
+      admin: {
+        description: 'Add any free-form tags you want.',
+      },
     },
     {
       name: 'readingTime',

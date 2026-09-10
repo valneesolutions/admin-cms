@@ -6,7 +6,7 @@ import { getPayload } from "payload";
  * Seed script for Blogs and Case Studies data
  *
  * This script populates the database with:
- * - 5 blogs with appropriate tags (featured, popular, latest) for filtering
+ * - 5 blogs with predefined categories (featured, popular, latest) for filtering
  * - 8 case studies with correct slugs for category mapping
  *
  * The tags and categories follow the specifications in BLOGS_AND_CASE_STUDIES_TAGS.md
@@ -23,13 +23,13 @@ const blogsSeedData: Array<Record<string, any>> = [
     status: "published",
     publishedAt: "2024-01-15T10:00:00.000Z",
     author: null, // Will be set after author is created
-    category: "Insights",
+    category: ["featured"],
     summary:
       "Discover how custom software development can save you money in the long term compared to off-the-shelf solutions.",
     content:
       "# Why Custom Software Development Is Cheaper Than You Think in the Long Run\n\nContent here...",
     coverImage: null, // Will need to be set with actual media ID
-    tags: [{ tag: "featured" }, { tag: "development" }, { tag: "cost-saving" }],
+    tags: [{ tag: "development" }, { tag: "cost-saving" }],
     readingTime: "8 min",
     metaTitle: "Why Custom Software Development Is Cheaper Than You Think",
     metaDescription:
@@ -42,18 +42,13 @@ const blogsSeedData: Array<Record<string, any>> = [
     status: "published",
     publishedAt: "2024-02-20T10:00:00.000Z",
     author: null,
-    category: "Startup Guide",
+    category: ["popular", "latest"],
     summary:
       "Learn effective strategies to validate your startup idea before investing in development.",
     content:
       "# How to Validate a Startup Idea Before Spending Money on Development\n\nContent here...",
     coverImage: null,
-    tags: [
-      { tag: "popular" },
-      { tag: "latest" },
-      { tag: "startup" },
-      { tag: "validation" },
-    ],
+    tags: [{ tag: "startup" }, { tag: "validation" }],
     readingTime: "10 min",
     metaTitle: "How to Validate a Startup Idea Before Spending Money",
     metaDescription:
@@ -65,18 +60,13 @@ const blogsSeedData: Array<Record<string, any>> = [
     status: "published",
     publishedAt: "2024-03-10T10:00:00.000Z",
     author: null,
-    category: "Startup Guide",
+    category: ["popular", "latest"],
     summary:
       "Understand why having a technical partner is crucial for startup success beyond just hiring developers.",
     content:
       "# Why Startups Need a Technical Partner, Not Just Developers\n\nContent here...",
     coverImage: null,
-    tags: [
-      { tag: "popular" },
-      { tag: "latest" },
-      { tag: "startup" },
-      { tag: "partnership" },
-    ],
+    tags: [{ tag: "startup" }, { tag: "partnership" }],
     readingTime: "12 min",
     metaTitle: "Why Startups Need a Technical Partner, Not Just Developers",
     metaDescription:
@@ -88,17 +78,12 @@ const blogsSeedData: Array<Record<string, any>> = [
     status: "published",
     publishedAt: "2024-04-05T10:00:00.000Z",
     author: null,
-    category: "Technology",
+    category: ["popular", "latest"],
     summary:
       "Explore the true meaning of founder-friendly technology and how it benefits your startup.",
     content: "# What 'Founder-Friendly Tech' Actually Means\n\nContent here...",
     coverImage: null,
-    tags: [
-      { tag: "popular" },
-      { tag: "latest" },
-      { tag: "technology" },
-      { tag: "founders" },
-    ],
+    tags: [{ tag: "technology" }, { tag: "founders" }],
     readingTime: "7 min",
     metaTitle: "What 'Founder-Friendly Tech' Actually Means",
     metaDescription: "Explore the true meaning of founder-friendly technology.",
@@ -109,18 +94,13 @@ const blogsSeedData: Array<Record<string, any>> = [
     status: "published",
     publishedAt: "2024-05-12T10:00:00.000Z",
     author: null,
-    category: "MVP Development",
+    category: ["popular", "latest"],
     summary:
       "Discover why non-technical founders often create superior MVPs and how to leverage this advantage.",
     content:
       "# Why Non-Technical Founders Often Build Better MVPs\n\nContent here...",
     coverImage: null,
-    tags: [
-      { tag: "popular" },
-      { tag: "latest" },
-      { tag: "mvp" },
-      { tag: "non-technical" },
-    ],
+    tags: [{ tag: "mvp" }, { tag: "non-technical" }],
     readingTime: "9 min",
     metaTitle: "Why Non-Technical Founders Often Build Better MVPs",
     metaDescription:
@@ -135,7 +115,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "saga-ai",
     image: null, // Will need to be set with actual media ID
     cover_image: null,
-    category: "AI Optimization",
+    category: [],
     reading_time: "8 min",
     description: "AI Optimization & Search Visibility platform",
     left_description:
@@ -159,7 +139,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "thyne",
     image: null,
     cover_image: null,
-    category: "Infrastructure",
+    category: [],
     reading_time: "10 min",
     description: "Real-time IoT medical dashboards",
     left_description:
@@ -183,7 +163,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "zoci",
     image: null,
     cover_image: null,
-    category: "eCommerce",
+    category: [],
     reading_time: "5 min",
     description: "Premium Shopify jewelry storefront",
     left_description:
@@ -206,7 +186,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "thyne-ai-case-study",
     image: null,
     cover_image: null,
-    category: "AI Platform",
+    category: [],
     reading_time: "12 min",
     description: "AI-powered medical IoT platform",
     left_description:
@@ -233,7 +213,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "project-pluto",
     image: null,
     cover_image: null,
-    category: "Mobile App",
+    category: [],
     reading_time: "7 min",
     description: "Innovative MVP development project",
     left_description:
@@ -256,7 +236,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "layers-landingpage-casestudy",
     image: null,
     cover_image: null,
-    category: "Web Design",
+    category: [],
     reading_time: "6 min",
     description: "High-converting landing page design",
     left_description:
@@ -280,7 +260,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "optirank-platform-casestudy",
     image: null,
     cover_image: null,
-    category: "SEO Platform",
+    category: [],
     reading_time: "9 min",
     description: "SEO optimization and ranking platform",
     left_description:
@@ -305,7 +285,7 @@ const caseStudiesSeedData: Array<Record<string, any>> = [
     slug: "ghostwriter-ai-case-study",
     image: null,
     cover_image: null,
-    category: "AI Content",
+    category: [],
     reading_time: "8 min",
     description: "AI-powered content creation platform",
     left_description:
@@ -477,9 +457,21 @@ const seedData = async () => {
       const existingCaseStudy = existing.docs[0];
       const updates: Record<string, any> = {};
 
-      // Check category
-      if (existingCaseStudy.category !== caseStudyData.category) {
-        updates.category = caseStudyData.category;
+      // Check category (now a multi-select, stored as an array)
+      const existingCategory: string[] = Array.isArray(
+        existingCaseStudy.category,
+      )
+        ? existingCaseStudy.category
+        : existingCaseStudy.category
+          ? [existingCaseStudy.category]
+          : [];
+      const requiredCategory: string[] = caseStudyData.category || [];
+      const categoryChanged =
+        existingCategory.length !== requiredCategory.length ||
+        requiredCategory.some((c) => !existingCategory.includes(c));
+
+      if (categoryChanged) {
+        updates.category = requiredCategory;
       }
 
       // Check tags
